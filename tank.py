@@ -1,22 +1,28 @@
-import vrep
+import sys
+import math
+from api import vrep
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Distances:
     def __init__(self, en, es, ne, nw, se, sw, wn, ws):
-        self.en = en
-        self.es = es
-        self.ne = ne
-        self.nw = nw
-        self.se = se
-        self.sw = sw
-        self.wn = wn
-        self.ws = ws
+        self.en = min(en, 10)
+        self.es = min(es, 10)
+        self.ne = min(ne, 10)
+        self.nw = min(nw, 10)
+        self.se = min(se, 10)
+        self.sw = min(sw, 10)
+        self.wn = min(wn, 10)
+        self.ws = min(ws, 10)
+
+    def __repr__(self):
+        return f'NW:{self.nw:.2f} NE:{self.ne:.2f} WN:{self.wn:.2f} EN:{self.en:.2f} | SW:{self.sw:.2f} SE:{self.se:.2f} WS:{self.ws:.2f} ES:{self.es:.2f}'
 
 
 class Tank:
-    def __init__(self, ID):
-        self.clientID = ID
+    def __init__(self):
+        self.clientID = self.connect()
         # get handles to robot drivers
         err_code, self.left_front_handle =  vrep.simxGetObjectHandle(self.clientID,'left_front', vrep.simx_opmode_blocking)
         err_code, self.left_back_handle  =  vrep.simxGetObjectHandle(self.clientID,'left_back', vrep.simx_opmode_blocking)
@@ -41,7 +47,27 @@ class Tank:
 
         # get handle to proximity sensors
         for i in range(len(self.proximity_sensors)):
-            err_code, self.proximity_sensors_handles[i] = vrep.simxGetObjectHandle(self.clientID, "Proximity_sensor_" + self.proximity_sensors[i], vrep.simx_opmode_blocking)
+            err_code, self.proximity_sensors_handles[i] = vrep.simxGetObjectHandle(
+                self.clientID, "Proximity_sensor_" + self.proximity_sensors[i], vrep.simx_opmode_blocking)
+
+        # proximity sensors initialization
+        for sensor_name, sensor_handle in zip(self.proximity_sensors, self.proximity_sensors_handles):
+            err_code, detectionState, detectedPoint, detectedObjectHandle, detectedSurfaceNormalVector = vrep.simxReadProximitySensor(
+                self.clientID, sensor_handle, vrep.simx_opmode_streaming)
+
+        self.distances_history = []
+
+    def connect(self):
+        vrep.simxFinish(-1)
+        client_id = vrep.simxStart('127.0.0.1', 19999, True, True, 5000, 5)
+
+        if client_id != -1:
+            print("Connected to remote API server")
+        else:
+            print("Not connected to remote API server")
+            sys.exit("Could not connect")
+
+        return client_id
 
     def stop(self):
         #set divers to stop mode
@@ -152,8 +178,32 @@ class Tank:
         distances = []
         for sensor_name, sensor_handle in zip(self.proximity_sensors, self.proximity_sensors_handles):
             err_code, detectionState, detectedPoint, detectedObjectHandle, detectedSurfaceNormalVector = vrep.simxReadProximitySensor(self.clientID, sensor_handle, vrep.simx_opmode_buffer)
-            distance = np.linalg.norm(detectedPoint)
+            distance = np.linalg.norm(detectedPoint) if detectionState == 0 else math.inf
             distances.append(distance)
-            if sensor_name == 'NW':
-                print('NW', distance)
-        return Distances(*distances)
+        distances = Distances(*distances)
+        self.distances_history.append(distances)
+        return distances
+
+    def plot_distances(self):
+        x = np.arange(len(self.distances_history)) / 10
+
+        nw = [d.nw for d in self.distances_history]
+        ne = [d.ne for d in self.distances_history]
+        wn = [d.wn for d in self.distances_history]
+        en = [d.en for d in self.distances_history]
+        sw = [d.sw for d in self.distances_history]
+        se = [d.se for d in self.distances_history]
+        ws = [d.ws for d in self.distances_history]
+        es = [d.es for d in self.distances_history]
+
+        plt.plot(x, nw, '-', label='nw')
+        plt.plot(x, ne, '-', label='ne')
+        plt.plot(x, wn, '-', label='wn')
+        plt.plot(x, en, '-', label='en')
+        plt.plot(x, sw, '--', label='sw')
+        plt.plot(x, se, '--', label='se')
+        plt.plot(x, ws, '--', label='ws')
+        plt.plot(x, es, '--', label='es')
+
+        plt.legend()
+        plt.show()
