@@ -13,6 +13,7 @@ class Controller:
             return True
 
         distances = self._tank.read_distances()
+        # print(f'sw: {distances.sw}; se: {distances.se}')
         current_stage = self._stages[0]
 
         # start stage
@@ -54,4 +55,4 @@ def run_simulation_with_controller(controller):
     while not finished:
         finished = controller.control()
 
-    tank.plot_distances()
+    tank.plot_distances2()

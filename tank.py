@@ -6,15 +6,16 @@ import matplotlib.pyplot as plt
 
 
 class Distances:
+
     def __init__(self, en, es, ne, nw, se, sw, wn, ws):
-        self.en = min(en, 10)
-        self.es = min(es, 10)
-        self.ne = min(ne, 10)
-        self.nw = min(nw, 10)
-        self.se = min(se, 10)
-        self.sw = min(sw, 10)
-        self.wn = min(wn, 10)
-        self.ws = min(ws, 10)
+        self.en = min(en, 6)
+        self.es = min(es, 6)
+        self.ne = min(ne, 6)
+        self.nw = min(nw, 6)
+        self.se = min(se, 6)
+        self.sw = min(sw, 6)
+        self.wn = min(wn, 6)
+        self.ws = min(ws, 6)
 
     def __repr__(self):
         return f'NW:{self.nw:.2f} NE:{self.ne:.2f} WN:{self.wn:.2f} EN:{self.en:.2f} | SW:{self.sw:.2f} SE:{self.se:.2f} WS:{self.ws:.2f} ES:{self.es:.2f}'
@@ -178,11 +179,16 @@ class Tank:
         distances = []
         for sensor_name, sensor_handle in zip(self.proximity_sensors, self.proximity_sensors_handles):
             err_code, detectionState, detectedPoint, detectedObjectHandle, detectedSurfaceNormalVector = vrep.simxReadProximitySensor(self.clientID, sensor_handle, vrep.simx_opmode_buffer)
-            distance = np.linalg.norm(detectedPoint) if detectionState == 0 else math.inf
+            norm = np.linalg.norm(detectedPoint)
+            distance = norm if err_code == 0 and norm > 1e-2 else math.inf
             distances.append(distance)
+
         distances = Distances(*distances)
         self.distances_history.append(distances)
         return distances
+
+    def restart_plot(self):
+        self.distances_history.clear()
 
     def plot_distances(self):
         x = np.arange(len(self.distances_history)) / 10
@@ -206,4 +212,34 @@ class Tank:
         plt.plot(x, es, '--', label='es')
 
         plt.legend()
+        plt.show()
+
+
+    def plot_distances2(self):
+        fig, axs = plt.subplots(4, 2)
+        x = np.arange(len(self.distances_history)) / 10
+
+        nw = [d.nw for d in self.distances_history]
+        ne = [d.ne for d in self.distances_history]
+        wn = [d.wn for d in self.distances_history]
+        en = [d.en for d in self.distances_history]
+        sw = [d.sw for d in self.distances_history]
+        se = [d.se for d in self.distances_history]
+        ws = [d.ws for d in self.distances_history]
+        es = [d.es for d in self.distances_history]
+
+        axs[0, 0].plot(x, nw, '-', label='nw')
+        axs[0, 1].plot(x, ne, '-', label='ne')
+        axs[1, 0].plot(x, wn, '-', label='wn')
+        axs[1, 1].plot(x, en, '-', label='en')
+        axs[2, 0].plot(x, sw, '--', label='sw')
+        axs[2, 1].plot(x, se, '--', label='se')
+        axs[3, 0].plot(x, ws, '--', label='ws')
+        axs[3, 1].plot(x, es, '--', label='es')
+
+        for i in range(4):
+            for j in range(2):
+                axs[i][j].legend()
+                axs[i][j].grid()
+
         plt.show()
