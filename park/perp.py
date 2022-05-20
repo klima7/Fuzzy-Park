@@ -54,10 +54,10 @@ class BackwardBeforeTurn(Stage):
 
     _model = FuzzyModel(
         max_vel=4,
-        break_vel=3,
+        break_vel=2,
         stop_dist=4.23,
         break_dist=4.6,
-        sharpness=0.1
+        sharpness=0.1,
     )
 
     def control(self, tank, distances):
@@ -69,11 +69,11 @@ class BackwardBeforeTurn(Stage):
 class TurnLeftToPark(Stage):
 
     _model = FuzzyModel(
-        max_vel=7,
+        max_vel=5,
         break_vel=2,
-        stop_dist=1.6,
-        break_dist=2.5,
-        sharpness=0.4
+        stop_dist=1.55,
+        break_dist=1.8,
+        sharpness=0.1,
     )
 
     def control(self, tank, distances):
@@ -93,27 +93,8 @@ class ForwardToFinish(Stage):
         sharpness=0.3
     )
 
-    def started(self, tank, distances):
-        tank.restart_plot()
-        self.start = time()
-        self.tmp1 = []
-        self.tmp2 = []
-        self.tmp3 = []
-        self.tmp4 = []
-
     def control(self, tank, distances):
         velocity = self._model.get_velocity(distances.nw)
         tank.forward(4)
-        self.tmp1.append(max(distances.nw, distances.ne))
-        self.tmp2.append(max(distances.wn, distances.en))
-        self.tmp3.append(max(distances.sw, distances.se))
-        self.tmp4.append(max(distances.es, distances.ws))
         stop = max(distances.wn, distances.en) > 3
-        # if stop:
-        #     plt.plot(self.tmp1, label='1')
-        #     plt.plot(self.tmp2, label='2')
-        #     plt.plot(self.tmp3, label='3')
-        #     plt.plot(self.tmp4, label='4')
-        #     plt.legend()
-        #     plt.show()
         return stop
