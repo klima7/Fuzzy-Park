@@ -40,8 +40,8 @@ class ForwardToFindLeftSpace(Stage):
         max_vel=10,
         break_vel=5,
         stop_dist=1.50,
-        break_dist=2.2,
-        sharpness=0.3
+        break_dist=2,
+        sharpness=0.2,
     )
 
     def control(self, tank, distances):

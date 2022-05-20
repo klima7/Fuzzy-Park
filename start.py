@@ -4,4 +4,4 @@ from park import PerpParkController, ParaParkController
 
 if __name__ == '__main__':
     run_with_controller(PerpParkController)
-    run_with_controller(ParaParkController)
+    # run_with_controller(ParaParkController)
