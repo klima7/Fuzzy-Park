@@ -1,4 +1,4 @@
-from tank import Tank
+from utils.tank import Tank
 
 
 class Controller:
@@ -47,7 +47,7 @@ class Stage:
         raise NotImplementedError('control method not implemented')
 
 
-def run_simulation_with_controller(controller):
+def run_with_controller(controller):
     tank = Tank()
     controller = controller(tank)
 

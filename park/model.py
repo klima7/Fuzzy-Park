@@ -47,9 +47,9 @@ class FuzzyModel:
         vel['m'] = fuzz.trimf(vel.universe, [0, self._break_vel, self._max_vel])
         vel['h'] = fuzz.trimf(vel.universe, [self._max_vel - h_span, self._max_vel, self._max_vel + h_span])
 
-        dist.view()
-        vel.view()
-        plt.show()
+        # dist.view()
+        # vel.view()
+        # plt.show()
 
         rules = [
             Rule(dist['l'], vel['l']),
