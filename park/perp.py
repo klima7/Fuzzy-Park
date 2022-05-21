@@ -2,7 +2,6 @@ from time import time
 
 import numpy as np
 import skfuzzy as fuzz
-from matplotlib import pyplot as plt
 from skfuzzy import control as ctrl
 from skfuzzy.control import Antecedent, Consequent, Rule
 
@@ -10,26 +9,10 @@ from utils.control import Controller, Stage
 from .model import FuzzyModel
 
 
-class WaitSomeTime(Stage):
-
-    def __init__(self, duration):
-        super().__init__()
-        self.duration = duration
-        self.start_time = None
-
-    def started(self, tank, distances):
-        self.start_time = time()
-
-    def control(self, tank, distances):
-        tank.stop()
-        return time() - self.start_time > self.duration
-
-
 class PerpParkController(Controller):
 
     def __init__(self, tank):
         stages = [
-            WaitSomeTime(0.1),
             ForwardToFindLeftSpace(),
             BackwardBeforeTurn(),
             TurnLeftToPark(),
@@ -95,13 +78,10 @@ class TurnLeftToPark(Stage):
     ctrl_system = ctrl.ControlSystem(rules)
     simulation = ctrl.ControlSystemSimulation(ctrl_system)
 
-    tmp = []
-
     @classmethod
     def get_velocity(cls, distances):
         cls.simulation.input['dist_min'] = min(distances.ne, distances.nw, distances.wn)
         cls.simulation.input['dist_wn'] = distances.wn
-        cls.tmp.append(min(distances.ne, distances.nw, distances.wn))
         cls.simulation.compute()
         velocity = cls.simulation.output['vel']
         if abs(velocity) < 0.5:
@@ -111,28 +91,6 @@ class TurnLeftToPark(Stage):
     def control(self, tank, distances):
         velocity = self.get_velocity(distances)
         tank.turn_left(velocity)
-        # if velocity == 0:
-        #     plt.plot(self.tmp)
-        #     plt.show()
-        #     self.plot_history()
-        return velocity == 0
-
-
-class ForwardToFinish2(Stage):
-
-    _model = FuzzyModel(
-        max_vel=6,
-        break_vel=6,
-        stop_dist=3,
-        break_dist=4,
-        sharpness=0.3,
-    )
-
-    def control(self, tank, distances):
-        print(f'nw: {distances.nw2:.2f} ne: {distances.ne2:.2f}')
-        distance = min(distances.nw2, distances.ne2)
-        velocity = self._model.get_velocity(6 - distance)
-        tank.forward(velocity)
         return velocity == 0
 
 
@@ -162,13 +120,10 @@ class ForwardToFinish(Stage):
     ctrl_system = ctrl.ControlSystem(rules)
     simulation = ctrl.ControlSystemSimulation(ctrl_system)
 
-    tmp = []
-
     @classmethod
     def get_velocity(cls, distances):
         cls.simulation.input['dist_f'] = min(distances.nw2, distances.ne2)
         cls.simulation.input['dist_b'] = max(distances.ws2, distances.es2)
-        cls.tmp.append(min(distances.ne, distances.nw, distances.wn))
         cls.simulation.compute()
         velocity = cls.simulation.output['vel']
         if abs(velocity) < 0.5:
@@ -178,8 +133,4 @@ class ForwardToFinish(Stage):
     def control(self, tank, distances):
         velocity = self.get_velocity(distances)
         tank.forward(velocity)
-        # if velocity == 0:
-        #     plt.plot(self.tmp)
-        #     plt.show()
-        #     self.plot_history()
         return velocity == 0

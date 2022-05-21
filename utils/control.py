@@ -1,3 +1,5 @@
+from time import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -8,7 +10,7 @@ class Controller:
 
     def __init__(self, tank, stages):
         self._tank = tank
-        self._stages = stages
+        self._stages = [WaitSomeTime(0.1)] + stages
 
     def control(self):
         # immediate return if finished
@@ -79,6 +81,21 @@ class Stage:
                 axs[i][j].grid()
 
         plt.show()
+
+
+class WaitSomeTime(Stage):
+
+    def __init__(self, duration):
+        super().__init__()
+        self.duration = duration
+        self.start_time = None
+
+    def started(self, tank, distances):
+        self.start_time = time()
+
+    def control(self, tank, distances):
+        tank.stop()
+        return time() - self.start_time > self.duration
 
 
 def run_with_controller(controller):
