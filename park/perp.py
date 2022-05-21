@@ -118,7 +118,7 @@ class TurnLeftToPark(Stage):
         return velocity == 0
 
 
-class ForwardToFinish(Stage):
+class ForwardToFinish2(Stage):
 
     _model = FuzzyModel(
         max_vel=6,
@@ -133,4 +133,53 @@ class ForwardToFinish(Stage):
         distance = min(distances.nw2, distances.ne2)
         velocity = self._model.get_velocity(6 - distance)
         tank.forward(velocity)
+        return velocity == 0
+
+
+class ForwardToFinish(Stage):
+
+    dist_f = Antecedent(np.linspace(0, 6, 100), 'dist_f')
+    dist_b = Antecedent(np.linspace(0, 7, 100), 'dist_b')
+    vel = Consequent(np.linspace(-1, 7, 100), 'vel')
+
+    dist_f['l'] = fuzz.trapmf(dist_f.universe, [0, 0, 2.9, 3])
+    dist_f['h'] = fuzz.trapmf(dist_f.universe, [2.9, 3, 6, 6])
+
+    dist_b['l'] = fuzz.trapmf(dist_b.universe, [0, 0, 1.9, 2.1])
+    dist_b['m'] = fuzz.trapmf(dist_b.universe, [1.9, 2.1, 5.4, 5.5])
+    dist_b['h'] = fuzz.trapmf(dist_b.universe, [5.4, 5.5, 7, 7])
+
+    vel['z'] = fuzz.trimf(vel.universe, [-1, 0, 1])
+    vel['l'] = fuzz.trimf(vel.universe, [2, 3, 4])
+    vel['h'] = fuzz.trimf(vel.universe, [5, 6, 7])
+
+    rules = [
+        Rule(dist_f['l'] & dist_b['m'], vel['h']),
+        Rule(dist_f['l'] & (dist_b['l'] | dist_b['h']), vel['l']),
+        Rule(dist_f['h'], vel['z']),
+    ]
+
+    ctrl_system = ctrl.ControlSystem(rules)
+    simulation = ctrl.ControlSystemSimulation(ctrl_system)
+
+    tmp = []
+
+    @classmethod
+    def get_velocity(cls, distances):
+        cls.simulation.input['dist_f'] = min(distances.nw2, distances.ne2)
+        cls.simulation.input['dist_b'] = max(distances.ws2, distances.es2)
+        cls.tmp.append(min(distances.ne, distances.nw, distances.wn))
+        cls.simulation.compute()
+        velocity = cls.simulation.output['vel']
+        if abs(velocity) < 0.5:
+            return 0
+        return velocity
+
+    def control(self, tank, distances):
+        velocity = self.get_velocity(distances)
+        tank.forward(velocity)
+        # if velocity == 0:
+        #     plt.plot(self.tmp)
+        #     plt.show()
+        #     self.plot_history()
         return velocity == 0
