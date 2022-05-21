@@ -18,7 +18,6 @@ class Controller:
             return True
 
         distances = self._tank.read_distances()
-        # print(f'sw: {distances.sw}; se: {distances.se}')
         current_stage = self._stages[0]
 
         # start stage
@@ -46,9 +45,10 @@ class Stage:
     def __init__(self):
         self.was_started = False
         self.dist_history = []
+        self.start = None
 
     def started(self, tank, distances):
-        pass
+        self.start = time()
 
     def control(self, tank, distances):
         raise NotImplementedError('control method not implemented')
@@ -57,14 +57,14 @@ class Stage:
         fig, axs = plt.subplots(4, 2)
         x = np.arange(len(self.dist_history)) / 10
 
-        nw = [d.nw for d in self.dist_history]
-        ne = [d.ne for d in self.dist_history]
-        wn = [d.wn for d in self.dist_history]
-        en = [d.en for d in self.dist_history]
-        sw = [d.sw for d in self.dist_history]
-        se = [d.se for d in self.dist_history]
-        ws = [d.ws for d in self.dist_history]
-        es = [d.es for d in self.dist_history]
+        nw = [d.nw2 for d in self.dist_history]
+        ne = [d.ne2 for d in self.dist_history]
+        wn = [d.wn2 for d in self.dist_history]
+        en = [d.en2 for d in self.dist_history]
+        sw = [d.sw2 for d in self.dist_history]
+        se = [d.se2 for d in self.dist_history]
+        ws = [d.ws2 for d in self.dist_history]
+        es = [d.es2 for d in self.dist_history]
 
         axs[0, 0].plot(x, nw, '-', label='nw')
         axs[0, 1].plot(x, ne, '-', label='ne')
