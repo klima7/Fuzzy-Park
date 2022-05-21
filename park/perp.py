@@ -1,9 +1,13 @@
 from time import time
 
+import numpy as np
+import skfuzzy as fuzz
 from matplotlib import pyplot as plt
+from skfuzzy import control as ctrl
+from skfuzzy.control import Antecedent, Consequent, Rule
 
-from .model import FuzzyModel
 from utils.control import Controller, Stage
+from .model import FuzzyModel
 
 
 class WaitSomeTime(Stage):
@@ -68,18 +72,49 @@ class BackwardBeforeTurn(Stage):
 
 class TurnLeftToPark(Stage):
 
-    _model = FuzzyModel(
-        max_vel=5,
-        break_vel=2,
-        stop_dist=1.55,
-        break_dist=1.8,
-        sharpness=0.1,
-    )
+    dist_min = Antecedent(np.linspace(0, 6, 100), 'dist_min')
+    dist_wn = Antecedent(np.linspace(0, 6, 100), 'dist_wn')
+    vel = Consequent(np.linspace(-1, 7, 100), 'vel')
+
+    dist_min['l'] = fuzz.trapmf(dist_min.universe, [0, 0, 1.55, 160])
+    dist_min['h'] = fuzz.trapmf(dist_min.universe, [1.55, 1.60, 6, 6])
+
+    dist_wn['l'] = fuzz.trapmf(dist_wn.universe, [0, 0, 2, 2.05])
+    dist_wn['h'] = fuzz.trapmf(dist_wn.universe, [2, 2.05, 6, 6])
+
+    vel['z'] = fuzz.trimf(vel.universe, [-1, 0, 1])
+    vel['l'] = fuzz.trimf(vel.universe, [0, 1, 2])
+    vel['h'] = fuzz.trimf(vel.universe, [5, 6, 7])
+
+    rules = [
+        Rule(dist_min['h'] & dist_wn['l'], vel['h']),
+        Rule(dist_min['h'] & dist_wn['h'], vel['l']),
+        Rule(dist_min['l'], vel['z']),
+    ]
+
+    ctrl_system = ctrl.ControlSystem(rules)
+    simulation = ctrl.ControlSystemSimulation(ctrl_system)
+
+    tmp = []
+
+    @classmethod
+    def get_velocity(cls, distances):
+        cls.simulation.input['dist_min'] = min(distances.ne, distances.nw, distances.wn)
+        cls.simulation.input['dist_wn'] = distances.wn
+        cls.tmp.append(min(distances.ne, distances.nw, distances.wn))
+        cls.simulation.compute()
+        velocity = cls.simulation.output['vel']
+        if abs(velocity) < 0.5:
+            return 0
+        return velocity
 
     def control(self, tank, distances):
-        distance = min(distances.ne, distances.nw, distances.wn)
-        velocity = self._model.get_velocity(distance)
+        velocity = self.get_velocity(distances)
         tank.turn_left(velocity)
+        # if velocity == 0:
+        #     plt.plot(self.tmp)
+        #     plt.show()
+        #     self.plot_history()
         return velocity == 0
 
 
