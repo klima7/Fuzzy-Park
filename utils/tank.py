@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class Distances:
 
-    def __init__(self, en, es, ne, nw, se, sw, wn, ws):
+    def __init__(self, en, en2, es, es2, ne, ne2, nw, nw2, se, se2, sw, sw2, wn, wn2, ws, ws2):
         self.en = min(en, 6)
         self.es = min(es, 6)
         self.ne = min(ne, 6)
@@ -16,6 +16,15 @@ class Distances:
         self.sw = min(sw, 6)
         self.wn = min(wn, 6)
         self.ws = min(ws, 6)
+
+        self.en2 = min(en2, 6)
+        self.es2 = min(es2, 6)
+        self.ne2 = min(ne2, 6)
+        self.nw2 = min(nw2, 6)
+        self.se2 = min(se2, 6)
+        self.sw2 = min(sw2, 6)
+        self.wn2 = min(wn2, 6)
+        self.ws2 = min(ws2, 6)
 
     def __repr__(self):
         return f'NW:{self.nw:.2f} NE:{self.ne:.2f} WN:{self.wn:.2f} EN:{self.en:.2f} | SW:{self.sw:.2f} SE:{self.se:.2f} WS:{self.ws:.2f} ES:{self.es:.2f}'
@@ -181,7 +190,8 @@ class Tank:
             err_code, detectionState, detectedPoint, detectedObjectHandle, detectedSurfaceNormalVector = vrep.simxReadProximitySensor(self.clientID, sensor_handle, vrep.simx_opmode_buffer)
             norm = np.linalg.norm(detectedPoint)
             distance = norm if err_code == 0 and norm > 1e-2 else math.inf
-            distances.append(distance)
+            distance2 = distance if detectionState else math.inf
+            distances.extend([distance, distance2])
 
         distances = Distances(*distances)
         self.distances_history.append(distances)

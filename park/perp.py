@@ -42,9 +42,9 @@ class ForwardToFindLeftSpace(Stage):
 
     _model = FuzzyModel(
         max_vel=10,
-        break_vel=5,
-        stop_dist=1.50,
-        break_dist=2,
+        break_vel=3,
+        stop_dist=1.55,
+        break_dist=2.05,
         sharpness=0.2,
     )
 
@@ -129,7 +129,8 @@ class ForwardToFinish(Stage):
     )
 
     def control(self, tank, distances):
-        distance = max(distances.wn, distances.en)
+        print(f'nw: {distances.nw2:.2f} ne: {distances.ne2:.2f}')
+        distance = min(distances.nw2, distances.ne2)
         velocity = self._model.get_velocity(6 - distance)
         tank.forward(velocity)
         return velocity == 0
