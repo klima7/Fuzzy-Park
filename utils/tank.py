@@ -213,33 +213,3 @@ class Tank:
 
         plt.legend()
         plt.show()
-
-
-    def plot_distances2(self):
-        fig, axs = plt.subplots(4, 2)
-        x = np.arange(len(self.distances_history)) / 10
-
-        nw = [d.nw for d in self.distances_history]
-        ne = [d.ne for d in self.distances_history]
-        wn = [d.wn for d in self.distances_history]
-        en = [d.en for d in self.distances_history]
-        sw = [d.sw for d in self.distances_history]
-        se = [d.se for d in self.distances_history]
-        ws = [d.ws for d in self.distances_history]
-        es = [d.es for d in self.distances_history]
-
-        axs[0, 0].plot(x, nw, '-', label='nw')
-        axs[0, 1].plot(x, ne, '-', label='ne')
-        axs[1, 0].plot(x, wn, '-', label='wn')
-        axs[1, 1].plot(x, en, '-', label='en')
-        axs[2, 0].plot(x, sw, '--', label='sw')
-        axs[2, 1].plot(x, se, '--', label='se')
-        axs[3, 0].plot(x, ws, '--', label='ws')
-        axs[3, 1].plot(x, es, '--', label='es')
-
-        for i in range(4):
-            for j in range(2):
-                axs[i][j].legend()
-                axs[i][j].grid()
-
-        plt.show()
