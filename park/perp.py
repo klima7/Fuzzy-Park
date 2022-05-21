@@ -86,15 +86,15 @@ class TurnLeftToPark(Stage):
 class ForwardToFinish(Stage):
 
     _model = FuzzyModel(
-        max_vel=10,
-        break_vel=5,
-        stop_dist=1.50,
-        break_dist=2.2,
-        sharpness=0.3
+        max_vel=6,
+        break_vel=6,
+        stop_dist=3,
+        break_dist=4,
+        sharpness=0.3,
     )
 
     def control(self, tank, distances):
-        velocity = self._model.get_velocity(distances.nw)
-        tank.forward(4)
-        stop = max(distances.wn, distances.en) > 3
-        return stop
+        distance = max(distances.wn, distances.en)
+        velocity = self._model.get_velocity(6 - distance)
+        tank.forward(velocity)
+        return velocity == 0
