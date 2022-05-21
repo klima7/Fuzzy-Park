@@ -169,6 +169,19 @@ class Tank:
             self.leftvelocity -=self.dVel
             self.rightvelocity+=self.dVel
         self.setVelocity()
+
+    def turn_left_circle(self, velocity):
+        self.go()
+        self.leftvelocity = 10 * (velocity / 10)
+        self.rightvelocity = 3 * (velocity / 10)
+        self.setVelocity()
+
+
+    def turn_right_circle(self, velocity):
+        self.go()
+        self.rightvelocity = 10 * (velocity / 10)
+        self.leftvelocity = 3 * (velocity / 10)
+        self.setVelocity()
     
     #Turns right the tank 
     #None - increases velocity of leftwheel by 1, decreases velocity of rightwheel by 1 
