@@ -113,7 +113,7 @@ class ParkFirstTurn(Stage):
     _model = FuzzyModel(
         max_vel=5,
         break_vel=3,
-        stop_dist=6-3.8,
+        stop_dist=6-3.9,
         break_dist=6-2.75,
         sharpness=0.2,
         # plot_sets=True,
@@ -134,9 +134,9 @@ class ParkSecondTurn(Stage):
     _model = FuzzyModel(
         max_vel=5,
         break_vel=1,
-        stop_dist=1,
-        break_dist=1.4,
-        sharpness=0.2,
+        stop_dist=1.15,
+        break_dist=1.7,
+        sharpness=0.25,
         # plot_sets=True,
         # plot_history=True
     )
