@@ -19,7 +19,6 @@ class ParaParkController(Controller):
             ParkFirstTurn(),
             ParkSecondTurn(),
             LastAdjustment(),
-            # Stop(),
         ]
         super().__init__(tank, stages)
 
@@ -140,27 +139,43 @@ class ParkSecondTurn(Stage):
 
 class LastAdjustment(Stage):
 
-    _model = FuzzyModel(
-        max_vel=5,
-        break_vel=1,
-        stop_dist=1,
-        break_dist=1.4,
-        sharpness=0.2,
-        # plot_sets=True,
-        # plot_history=True
-    )
+    diff = Antecedent(np.linspace(-2, 2, 200), 'diff')
+    vel = Consequent(np.linspace(-4, 4, 200), 'vel')
+
+    best = -0.5
+    slope = 0.4
+    speed = 1.5
+
+    diff['l'] = fuzz.trapmf(diff.universe, [-2, -2, best - slope, best])
+    diff['m'] = fuzz.trimf(diff.universe, [best - slope, best, best + slope])
+    diff['h'] = fuzz.trapmf(diff.universe, [best, best + slope, 2, 2])
+
+    vel['zero'] = fuzz.trimf(vel.universe, [-1, 0, 1])
+    vel['forward'] = fuzz.trimf(vel.universe, [speed-1, speed, speed+1])
+    vel['backward'] = fuzz.trimf(vel.universe, [-speed-1, -speed, -speed+1])
+
+    rules = [
+        Rule(diff['h'], vel['forward']),
+        Rule(diff['l'], vel['backward']),
+        Rule(diff['m'], vel['zero']),
+    ]
+
+    ctrl_system = ctrl.ControlSystem(rules)
+    simulation = ctrl.ControlSystemSimulation(ctrl_system)
+
+    @classmethod
+    def get_velocity(cls, distances):
+        front = min(distances.nw2, distances.ne2)
+        back = min(distances.sw2, distances.se2)
+        diff = front - back
+        cls.simulation.input['diff'] = diff
+        cls.simulation.compute()
+        velocity = cls.simulation.output['vel']
+        if abs(velocity) < 0.1:
+            return 0
+        return velocity
 
     def control(self, tank, distances):
-        distance = min(distances.se2, distances.sw2)
-        velocity = -self._model.get_velocity(distance)
-        tank.turn_right_circle(velocity)
-        # return time() - self.start > 5
-        # Może dobry pomysł
+        velocity = self.get_velocity(distances)
+        tank.forward(velocity)
         return velocity == 0
-
-
-class Stop(Stage):
-
-    def control(self, tank, distances):
-        tank.stop()
-        return True
