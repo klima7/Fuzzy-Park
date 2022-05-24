@@ -110,12 +110,23 @@ class DriveCloserSecondTurn(Stage):
 
 class ParkFirstTurn(Stage):
 
+    _model = FuzzyModel(
+        max_vel=5,
+        break_vel=3,
+        stop_dist=6-3.8,
+        break_dist=6-2.75,
+        sharpness=0.2,
+        # plot_sets=True,
+        # plot_history=True
+    )
+
     def control(self, tank, distances):
-        tank.turn_left_circle(-7)
-        stop = distances.ws2 > 3.6
+        velocity = -self._model.get_velocity(6 - distances.ws2)
+        tank.turn_left_circle(velocity)
+        # stop = distances.ws2 > 3.6
         # if stop:
         #     self.plot_history()
-        return stop
+        return velocity == 0
 
 
 class ParkSecondTurn(Stage):
