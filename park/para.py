@@ -18,6 +18,7 @@ class ParaParkController(Controller):
             DriveCloserSecondTurn(),
             ParkFirstTurn(),
             ParkSecondTurn(),
+            LastAdjustment(),
             # Stop(),
         ]
         super().__init__(tank, stages)
@@ -111,17 +112,51 @@ class DriveCloserSecondTurn(Stage):
 class ParkFirstTurn(Stage):
 
     def control(self, tank, distances):
-        tank.turn_left_circle(-5)
-        return time() - self.start > 5
+        tank.turn_left_circle(-7)
+        stop = distances.ws2 > 3.6
+        # if stop:
+        #     self.plot_history()
+        return stop
 
 
 class ParkSecondTurn(Stage):
 
+    _model = FuzzyModel(
+        max_vel=5,
+        break_vel=1,
+        stop_dist=1,
+        break_dist=1.4,
+        sharpness=0.2,
+        # plot_sets=True,
+        # plot_history=True
+    )
+
     def control(self, tank, distances):
-        tank.turn_right_circle(-5)
-        return time() - self.start > 5
+        distance = min(distances.se2, distances.sw2)
+        velocity = -self._model.get_velocity(distance)
+        tank.turn_right_circle(velocity)
+        return velocity == 0
+
+
+class LastAdjustment(Stage):
+
+    _model = FuzzyModel(
+        max_vel=5,
+        break_vel=1,
+        stop_dist=1,
+        break_dist=1.4,
+        sharpness=0.2,
+        # plot_sets=True,
+        # plot_history=True
+    )
+
+    def control(self, tank, distances):
+        distance = min(distances.se2, distances.sw2)
+        velocity = -self._model.get_velocity(distance)
+        tank.turn_right_circle(velocity)
+        # return time() - self.start > 5
         # Może dobry pomysł
-        # return distances.se2 - distances.sw2 < 0.001
+        return velocity == 0
 
 
 class Stop(Stage):
@@ -129,5 +164,3 @@ class Stop(Stage):
     def control(self, tank, distances):
         tank.stop()
         return True
-
-
