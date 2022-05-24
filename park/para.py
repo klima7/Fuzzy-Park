@@ -1,5 +1,3 @@
-from time import time
-
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -31,8 +29,6 @@ class ForwardToFindSpace(Stage):
         stop_dist=3.9,
         break_dist=4.4,
         sharpness=0.2,
-        # plot_sets=True,
-        # plot_history=True
     )
 
     def control(self, tank, distances):
@@ -40,8 +36,6 @@ class ForwardToFindSpace(Stage):
         velocity = self._model.get_velocity(distance)
         tank.forward(velocity)
         stop = velocity == 0
-        # if stop:
-        #     self.plot_history()
         return stop
 
 
@@ -53,8 +47,6 @@ class DriveCloserFirstTurn(Stage):
         stop_dist=0.7,
         break_dist=1,
         sharpness=0.1,
-        # plot_sets=True,
-        # plot_history=True
     )
 
     def control(self, tank, distances):
@@ -103,8 +95,6 @@ class DriveCloserSecondTurn(Stage):
         velocity = self.get_velocity(distances)
         tank.turn_right_circle(velocity)
         stop = velocity == 0
-        # if stop:
-        #     self.plot_history()
         return stop
 
 
@@ -116,16 +106,11 @@ class ParkFirstTurn(Stage):
         stop_dist=6-3.9,
         break_dist=6-2.75,
         sharpness=0.2,
-        # plot_sets=True,
-        # plot_history=True
     )
 
     def control(self, tank, distances):
         velocity = -self._model.get_velocity(6 - distances.ws2)
         tank.turn_left_circle(velocity)
-        # stop = distances.ws2 > 3.6
-        # if stop:
-        #     self.plot_history()
         return velocity == 0
 
 
@@ -137,8 +122,6 @@ class ParkSecondTurn(Stage):
         stop_dist=1.15,
         break_dist=1.7,
         sharpness=0.25,
-        # plot_sets=True,
-        # plot_history=True
     )
 
     def control(self, tank, distances):
